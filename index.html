@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>保育舍每日環控與巡檢回報表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f5f2;
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 自訂滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 9999px;
+        }
+        /* 列印樣式優化 */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .card-shadow {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                break-inside: avoid;
+            }
+            input, select, textarea {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+        }
+        .touch-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .touch-btn:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body class="pb-28 md:pb-12">
+
+    <!-- 頂部固定導覽與狀態列 -->
+    <header class="sticky top-0 z-40 bg-emerald-900 text-white shadow-md no-print">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-emerald-700 p-2 rounded-xl border border-emerald-600/50 shadow-inner">
+                    <svg class="w-6 h-6 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-tight">保育舍每日環控與巡檢回報表</h1>
+                    <p class="text-xs text-emerald-200/90">保育舍現場管理與新人環控訓練表單</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span id="saveStatus" class="hidden sm:inline-flex items-center text-xs bg-emerald-800/80 text-emerald-200 px-2.5 py-1 rounded-full border border-emerald-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>已自動暫存
+                </span>
+                <button type="button" onclick="openReportModal()" class="touch-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-3.5 py-2 rounded-xl shadow-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                    <span>產生回報</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 列印專用標頭 -->
+    <div class="hidden print-only max-w-4xl mx-auto px-4 pt-4 pb-2 border-b-2 border-slate-800 mb-4">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">保育舍每日環控與巡檢回報表</h1>
+                <p class="text-sm text-slate-600">保育舍現場管理與新人環控訓練表單</p>
+            </div>
+            <div class="text-right text-xs text-slate-500">
+                列印時間：<span id="printTimestamp"></span>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4 space-y-5">
+
+        <!-- 現場主管帶教與執行重點（可收合隨身指南） -->
+        <section class="bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden card-shadow no-print">
+            <button type="button" onclick="toggleGuide()" class="w-full px-4 py-3 flex items-center justify-between text-left bg-amber-100/70 hover:bg-amber-100 transition-colors">
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-md">帶教指南</span>
+                    <span class="font-bold text-amber-950 text-sm sm:text-base">現場主管帶教與執行重點（訓練新人預判天氣與看豬調環控）</span>
+                </div>
+                <svg id="guideChevron" class="w-5 h-5 text-amber-800 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div id="guideContent" class="hidden px-4 py-3.5 text-sm text-amber-950 space-y-2.5 border-t border-amber-200/80">
+                <div class="flex items-start gap-2.5">
+                    <span class="font-bold text-amber-600 mt-0.5">●</span>
+                    <p><strong class="font-bold">09:00 查預報 + 預估風扇與變頻：</strong>每天早上先查氣象 App 填入四個時段的預報溫濕度，並預估各時段風扇開幾台及變頻器 % 數；下班後再補填「實際」調整數值，透過「預估與實際的落差」訓練新人預判氣候變化的敏感度。</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="font-bold text-amber-600 mt-0.5">●</span>
+                    <p><strong class="font-bold">「躺臥姿勢」強制拍照回傳：</strong>新人看溫度計常忽略風冷效應與帆布開度。規定每天 09:00 與 22:00 拍一張豬群睡姿照傳群組，主管掃一眼即可指導調整帆布高度或保溫燈。</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="font-bold text-amber-600 mt-0.5">●</span>
+                    <p><strong class="font-bold">善用最高/最低溫度計：</strong>夜間至清晨最易因降溫過快誘發下痢或呼吸道問題。要求每天 09:00 讀取前一夜最低溫並按歸零鍵，確認日夜溫差是否控制在 7℃ 警戒線內。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 一、基礎與死淘數據 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden card-shadow">
+            <div class="bg-slate-800 text-white px-4 py-3 flex items-center justify-between">
+                <h2 class="font-bold text-base sm:text-lg flex items-center gap-2">
+                    <span class="bg-emerald-500 text-slate-950 text-xs font-black px-2 py-0.5 rounded">一</span>
+                    基礎與死淘數據
+                </h2>
+                <button type="button" onclick="confirmResetForm()" class="no-print text-xs text-slate-300 hover:text-white underline">清空重填</button>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <!-- 第一排：日期、棟舍、日齡、控制器設定 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <!-- 填寫日期 -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">填寫日期</label>
+                        <input type="date" id="reportDate" onchange="saveFormData()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-base font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                    </div>
+
+                    <!-- 棟舍別 -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">棟舍別 (第幾舍)</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-slate-600">第</span>
+                            <select id="barnNumber" onchange="saveFormData()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-base font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="">請選擇</option>
+                                <option value="1">1 舍</option>
+                                <option value="2">2 舍</option>
+                                <option value="3">3 舍</option>
+                                <option value="4">4 舍</option>
+                                <option value="5">5 舍</option>
+                                <option value="6">6 舍</option>
+                                <option value="7">7 舍</option>
+                                <option value="8">8 舍</option>
+                                <option value="A">A 舍</option>
+                                <option value="B">B 舍</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 豬隻日齡 -->
+                    <div id="ageCard" class="bg-slate-50 p-3 rounded-xl border border-slate-200 transition-colors">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">豬隻日齡</label>
+                        <div class="relative flex items-center">
+                            <input type="number" inputmode="numeric" id="pigAge" placeholder="例如: 32" oninput="handleAgeChange(); saveFormData();" class="w-full bg-white border border-slate-300 rounded-lg pl-3 pr-12 py-2 text-base font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <span class="absolute right-3 text-sm font-bold text-slate-500">日齡</span>
+                        </div>
+                        <p id="ageAlertBadge" class="hidden mt-1.5 text-xs font-bold text-amber-800 bg-amber-200/80 px-2 py-1 rounded-md">
+                            🔥 ≤35日齡：必看保溫燈狀態！
+                        </p>
+                    </div>
+
+                    <!-- 控制器設定 -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">控制器設定溫度</label>
+                        <div class="relative flex items-center">
+                            <input type="number" step="0.5" inputmode="decimal" id="controllerTemp" placeholder="26.5" oninput="saveFormData()" class="w-full bg-white border border-slate-300 rounded-lg pl-3 pr-10 py-2 text-base font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <span class="absolute right-3 text-sm font-bold text-slate-500">℃</span>
+                        </div>
+                        <p class="mt-1 text-[11px] text-slate-500">※ 每週依日齡核對調降</p>
+                    </div>
+                </div>
+
+                <!-- 第二排：今日死淘頭數與原因備註 -->
+                <div class="bg-rose-50/60 p-3.5 rounded-xl border border-rose-200/80 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div class="sm:w-44 shrink-0">
+                            <label class="block text-xs font-bold text-rose-900 mb-1">今日死淘頭數</label>
+                            <div class="relative flex items-center">
+                                <span class="text-sm font-bold text-rose-800 mr-2">共</span>
+                                <input type="number" inputmode="numeric" min="0" id="mortalityCount" value="0" oninput="saveFormData()" class="w-full bg-white border border-rose-300 rounded-lg pl-3 pr-9 py-2 text-base font-bold text-rose-900 focus:ring-2 focus:ring-rose-500 outline-none">
+                                <span class="absolute right-3 text-sm font-bold text-rose-700">頭</span>
+                            </div>
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-rose-900 mb-1">死淘原因備註（可點選標籤快速加入）</label>
+                            <div class="flex flex-wrap gap-1.5 mb-2 no-print">
+                                <button type="button" onclick="appendMortalityTag('下痢')" class="touch-btn text-xs bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-medium px-2.5 py-1 rounded-full">+ 下痢</button>
+                                <button type="button" onclick="appendMortalityTag('消瘦')" class="touch-btn text-xs bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-medium px-2.5 py-1 rounded-full">+ 消瘦</button>
+                                <button type="button" onclick="appendMortalityTag('喘氣')" class="touch-btn text-xs bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-medium px-2.5 py-1 rounded-full">+ 喘氣</button>
+                                <button type="button" onclick="appendMortalityTag('神經症狀')" class="touch-btn text-xs bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-medium px-2.5 py-1 rounded-full">+ 神經症狀</button>
+                                <button type="button" onclick="appendMortalityTag('外傷/咬尾')" class="touch-btn text-xs bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-medium px-2.5 py-1 rounded-full">+ 外傷/咬尾</button>
+                                <button type="button" onclick="appendMortalityTag('無死淘')" class="touch-btn text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-medium px-2.5 py-1 rounded-full">✓ 今日無死淘</button>
+                            </div>
+                            <input type="text" id="mortalityReason" placeholder="輸入原因備註（例：下痢 1 頭、消瘦 1 頭）" oninput="saveFormData()" class="w-full bg-white border border-rose-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-rose-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 二、四時段環控與設備紀錄 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden card-shadow">
+            <div class="bg-slate-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 class="font-bold text-base sm:text-lg flex items-center gap-2">
+                    <span class="bg-emerald-500 text-slate-950 text-xs font-black px-2 py-0.5 rounded">二</span>
+                    四時段環控與設備紀錄
+                </h2>
+                <span class="text-xs text-slate-300">09:00 查預報填預計，下班補填實際</span>
+            </div>
+
+            <div class="p-4 space-y-5">
+                <!-- 1. 前一夜最高/最低溫（獨立重點區塊） -->
+                <div class="bg-sky-50/70 border border-sky-200 rounded-xl p-3.5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 class="font-bold text-sky-950 text-sm sm:text-base flex items-center gap-1.5">
+                                <span>🌡️ 前一夜最高 / 最低溫紀錄</span>
+                                <span class="text-xs font-normal bg-sky-200/80 text-sky-900 px-2 py-0.5 rounded-full">09:00 讀取後按歸零鍵</span>
+                            </h3>
+                        </div>
+                        <label class="inline-flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-sky-300 shadow-xs select-none">
+                            <input type="checkbox" id="thermometerReset" onchange="saveFormData()" class="w-4 h-4 accent-emerald-600 rounded">
+                            <span class="text-xs sm:text-sm font-bold text-slate-800">已按溫度計歸零鍵</span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">前一夜最高溫</label>
+                            <div class="relative flex items-center">
+                                <input type="number" step="0.1" inputmode="decimal" id="prevMaxTemp" placeholder="例如: 29.5" oninput="calculateTempDiff(); saveFormData();" class="w-full bg-white border border-slate-300 rounded-lg pl-3 pr-9 py-2 text-base font-bold text-rose-600 focus:ring-2 focus:ring-sky-500 outline-none">
+                                <span class="absolute right-3 text-sm font-bold text-slate-400">℃</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">前一夜最低溫</label>
+                            <div class="relative flex items-center">
+                                <input type="number" step="0.1" inputmode="decimal" id="prevMinTemp" placeholder="例如: 21.0" oninput="calculateTempDiff(); saveFormData();" class="w-full bg-white border border-slate-300 rounded-lg pl-3 pr-9 py-2 text-base font-bold text-sky-600 focus:ring-2 focus:ring-sky-500 outline-none">
+                                <span class="absolute right-3 text-sm font-bold text-slate-400">℃</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200 flex flex-col justify-center">
+                            <span class="text-xs font-bold text-slate-500">自動計算日夜溫差</span>
+                            <div class="flex items-baseline gap-1.5 mt-0.5">
+                                <span id="tempDiffValue" class="text-2xl font-black text-slate-400">--</span>
+                                <span class="text-sm font-bold text-slate-500">℃</span>
+                                <span class="text-[11px] text-slate-400 ml-auto">(警戒線: &gt;7℃)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 溫差智慧警戒橫幅 -->
+                    <div id="tempDiffAlert" class="hidden rounded-xl p-3 text-sm font-bold flex items-center gap-2.5 transition-all">
+                        <!-- 動態填入 -->
+                    </div>
+                </div>
+
+                <!-- 2. 四時段卡片網格 (09:00 / 12:00 / 17:00 / 23:00) -->
+                <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base">⏰ 四時段氣象預報 & 風扇變頻（預計 vs 實際）</h3>
+                        <span class="text-xs text-slate-500 hidden sm:inline">填寫後自動比對預估落差</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="timeSlotsContainer">
+                        <!-- 由 JS 動態生成 09:00, 12:00, 17:00, 23:00 卡片 -->
+                    </div>
+                </div>
+
+                <!-- 3. 帆布 / 負壓 / 保溫燈狀態 -->
+                <div class="border-t border-slate-200 pt-4 space-y-4">
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        <span>🎛️ 帆布 / 負壓 / 保溫燈狀態</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 帆布舍狀態 -->
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-slate-800">帆布舍開度</span>
+                                <span class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">09:00 與 22:00 必看</span>
+                            </div>
+                            
+                            <!-- 早晚帆布設定 -->
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-500 block mb-1">☀️ 09:00 (早場) 帆布狀態：</span>
+                                    <div class="grid grid-cols-4 gap-1.5" id="curtain09Group">
+                                        <!-- JS 渲染按鈕 -->
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-500 block mb-1">🌙 22:00 (晚場) 帆布狀態：</span>
+                                    <div class="grid grid-cols-4 gap-1.5" id="curtain22Group">
+                                        <!-- JS 渲染按鈕 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 保溫燈狀態 -->
+                        <div id="heatLampBox" class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-slate-800">保溫燈狀態</span>
+                                <span id="heatLampBadge" class="text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">35日齡以下必看</span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-500 block mb-1">☀️ 09:00 (早場) 保溫燈：</span>
+                                    <div class="grid grid-cols-3 gap-1.5" id="lamp09Group">
+                                        <!-- JS 渲染按鈕 -->
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-500 block mb-1">🌙 22:00 (晚場) 保溫燈：</span>
+                                    <div class="grid grid-cols-3 gap-1.5" id="lamp22Group">
+                                        <!-- JS 渲染按鈕 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 三、豬隻行為與空氣水料快篩（看豬調環控） -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden card-shadow">
+            <div class="bg-slate-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 class="font-bold text-base sm:text-lg flex items-center gap-2">
+                    <span class="bg-emerald-500 text-slate-950 text-xs font-black px-2 py-0.5 rounded">三</span>
+                    豬隻行為與空氣水料快篩（看豬調環控）
+                </h2>
+                <span class="text-xs text-emerald-300 font-medium">早晚各巡檢一次 · 09:00 & 22:00 拍照傳群組</span>
+            </div>
+
+            <!-- 早場 / 晚場 切換分頁籤 -->
+            <div class="bg-slate-100 p-2 border-b border-slate-200 flex gap-2 no-print">
+                <button type="button" id="tabMorning" onclick="switchInspectionShift('morning')" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-emerald-700 text-white shadow-sm transition-all">
+                    <span>☀️ 早場巡檢 (09:00)</span>
+                    <span id="morningStatusDot" class="w-2 h-2 rounded-full bg-amber-300"></span>
+                </button>
+                <button type="button" id="tabNight" onclick="switchInspectionShift('night')" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 transition-all">
+                    <span>🌙 晚場巡檢 (22:00)</span>
+                    <span id="nightStatusDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-5" id="inspectionContainer">
+                <!-- 由 JS 動態渲染當前時段的四大觀察面向與拍照上傳區塊 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 底部浮動快捷操作列（手機版極度友善） -->
+    <div class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] no-print">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
+            <div class="text-xs text-slate-600">
+                <div class="font-bold text-slate-800" id="bottomSummaryText">尚未填寫日期與棟舍</div>
+                <div id="bottomAlertCount" class="text-emerald-700 font-medium">目前無異常警示</div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.print()" class="touch-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    <span class="hidden sm:inline">列印 / PDF</span>
+                </button>
+                <button type="button" onclick="openReportModal()" class="touch-btn bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5">
+                    <span>複製 LINE 回報</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LINE 回報與匯出 Modal -->
+    <div id="reportModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+            <div class="bg-emerald-900 text-white px-4 py-3.5 flex items-center justify-between">
+                <h3 class="font-bold text-base sm:text-lg flex items-center gap-2">
+                    <span>📋 LINE 群組每日回報摘要</span>
+                </h3>
+                <button type="button" onclick="closeReportModal()" class="text-emerald-200 hover:text-white p-1 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="p-4 overflow-y-auto space-y-3 flex-1">
+                <p class="text-xs text-slate-600 bg-slate-100 p-2.5 rounded-lg">
+                    💡 點擊下方「一鍵複製文字」後，即可直接貼上至 LINE 工作群組回報（別忘了附上 09:00 與 22:00 的豬群躺臥照片喔！）。
+                </p>
+                <textarea id="lineReportText" rows="14" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-mono text-slate-800 focus:outline-none leading-relaxed"></textarea>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <button type="button" onclick="downloadCSV()" class="touch-btn text-xs sm:text-sm bg-white hover:bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl border border-slate-300">
+                    下載 CSV 紀錄
+                </button>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button type="button" onclick="closeReportModal()" class="touch-btn text-sm bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2.5 rounded-xl">
+                        關閉
+                    </button>
+                    <button type="button" onclick="copyLineReport()" id="copyBtn" class="touch-btn text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        <span>一鍵複製文字</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自訂提示 Toast 與 確認框 (取代 alert/confirm) -->
+    <div id="toastMessage" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-900 text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-lg transition-all"></div>
+
+    <div id="confirmResetModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl space-y-4">
+            <h3 class="font-bold text-lg text-slate-900">確定要清空所有資料嗎？</h3>
+            <p class="text-sm text-slate-600">這將會清除目前表單上所有已填寫的數據與勾選狀態，恢復為預設空白表單。</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">取消</button>
+                <button type="button" onclick="executeResetForm()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm">確定清空</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 系統狀態與資料結構 ---
+        const TIME_SLOTS = ['09:00', '12:00', '17:00', '23:00'];
+        const CURTAIN_OPTIONS = ['全關', '開 1/3', '開 1/2', '全開'];
+        const LAMP_OPTIONS = ['全關', '隔盞開', '全開'];
+
+        const INSPECTION_SCHEMA = [
+            {
+                key: 'posture',
+                title: '1. 豬群躺臥姿勢（最直接體感指標）',
+                options: [
+                    {
+                        id: 'comfort',
+                        label: '舒適：豬隻均勻分散側躺，互不推擠',
+                        type: 'normal',
+                        advice: ''
+                    },
+                    {
+                        id: 'cold',
+                        label: '過冷或有賊風：堆疊、緊擠在牆角或保溫燈正下方',
+                        type: 'warning',
+                        advice: '💡 調整建議：檢查帆布密合度與牆縫賊風，適度調降最小通風量或開啟保溫燈。'
+                    },
+                    {
+                        id: 'hot',
+                        label: '過熱：遠離保溫區、呼吸急促喘氣、躺臥在排糞區或飲水器旁',
+                        type: 'danger',
+                        advice: '💡 調整建議：調高風扇段數或變頻器 % 數，並視室外溫度逐步降下帆布增加風冷效應。'
+                    }
+                ]
+            },
+            {
+                key: 'cleanliness',
+                title: '2. 欄內髒污與排泄區',
+                options: [
+                    {
+                        id: 'normal',
+                        label: '正常：躺臥區保持乾燥，糞尿集中於漏縫地板或排糞區',
+                        type: 'normal',
+                        advice: ''
+                    },
+                    {
+                        id: 'dirty',
+                        label: '異常：躺臥區出現濕髒（溫度過高豬隻玩水躺糞，或賊風吹向原排糞區導致換位）',
+                        type: 'warning',
+                        advice: '💡 調整建議：確認是否因悶熱導致玩水，或查明賊風來源並引導豬隻重新建立排糞區。'
+                    }
+                ]
+            },
+            {
+                key: 'air',
+                title: '3. 進舍第一口氣體感',
+                options: [
+                    {
+                        id: 'fresh',
+                        label: '無明顯刺鼻味',
+                        type: 'normal',
+                        advice: ''
+                    },
+                    {
+                        id: 'ammonia',
+                        label: '氨氣重（眼睛微刺，代表最小通風不足）',
+                        type: 'danger',
+                        advice: '💡 調整建議：提高基礎最小通風段數（變頻 % 數），避免氨氣傷害豬隻呼吸道黏膜。'
+                    },
+                    {
+                        id: 'humid',
+                        label: '悶熱濕氣重',
+                        type: 'warning',
+                        advice: '💡 調整建議：增加換氣量並檢查水線是否漏水造成舍內濕度過高。'
+                    }
+                ]
+            },
+            {
+                key: 'feedWater',
+                title: '4. 飲水與採食異常',
+                options: [
+                    {
+                        id: 'normal',
+                        label: '正常（飲水順暢、採食正常無積料）',
+                        type: 'normal',
+                        advice: ''
+                    },
+                    {
+                        id: 'moldyFeed',
+                        label: '料槽積料發霉',
+                        type: 'warning',
+                        advice: '💡 調整建議：立即清理發霉殘料並調小飼料下料間隙，檢查是否有雨水潑入或漏水。'
+                    },
+                    {
+                        id: 'waterIssue',
+                        label: '水壓過高/過低或飲水器高度需調整',
+                        type: 'warning',
+                        advice: '💡 調整建議：依豬隻背高調整飲水器高度，並調整減壓閥確保流速適中（保育豬約 0.5~0.8 L/分）。'
+                    }
+                ]
+            }
+        ];
+
+        // 預設表單狀態
+        let appState = {
+            reportDate: new Date().toISOString().split('T')[0],
+            barnNumber: '',
+            pigAge: '',
+            controllerTemp: '',
+            mortalityCount: '0',
+            mortalityReason: '',
+            prevMaxTemp: '',
+            prevMinTemp: '',
+            thermometerReset: false,
+            slots: {
+                '09:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' },
+                '12:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' },
+                '17:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' },
+                '23:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' }
+            },
+            curtain09: '',
+            curtain22: '',
+            lamp09: '',
+            lamp22: '',
+            currentShift: 'morning',
+            inspection: {
+                morning: { posture: '', cleanliness: '', air: '', feedWater: '', photoSent: false, photoDataUrl: '' },
+                night: { posture: '', cleanliness: '', air: '', feedWater: '', photoSent: false, photoDataUrl: '' }
+            }
+        };
+
+        // --- 初始化 ---
+        window.onload = function () {
+            loadFormData();
+            renderTimeSlots();
+            renderDeviceButtons();
+            renderInspectionShift();
+            applyStateToInputs();
+            calculateTempDiff();
+            handleAgeChange();
+            updateBottomSummary();
+        };
+
+        // --- UI 互動功能 ---
+        function toggleGuide() {
+            const content = document.getElementById('guideContent');
+            const chevron = document.getElementById('guideChevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        function appendMortalityTag(tag) {
+            const input = document.getElementById('mortalityReason');
+            if (tag === '無死淘') {
+                document.getElementById('mortalityCount').value = 0;
+                input.value = '今日無死淘';
+            } else {
+                const current = input.value.trim();
+                if (current === '今日無死淘') {
+                    input.value = `${tag} 1頭`;
+                } else if (current) {
+                    input.value = `${current}、${tag} 1頭`;
+                } else {
+                    input.value = `${tag} 1頭`;
+                }
+            }
+            saveFormData();
+        }
+
+        // 日齡提醒聯動
+        function handleAgeChange() {
+            const ageVal = parseInt(document.getElementById('pigAge').value, 10);
+            const ageCard = document.getElementById('ageCard');
+            const ageAlertBadge = document.getElementById('ageAlertBadge');
+            const heatLampBox = document.getElementById('heatLampBox');
+            const heatLampBadge = document.getElementById('heatLampBadge');
+
+            if (!isNaN(ageVal) && ageVal <= 35) {
+                ageCard.classList.remove('bg-slate-50', 'border-slate-200');
+                ageCard.classList.add('bg-amber-50', 'border-amber-400');
+                ageAlertBadge.classList.remove('hidden');
+
+                heatLampBox.classList.remove('bg-slate-50', 'border-slate-200');
+                heatLampBox.classList.add('bg-amber-50/80', 'border-amber-400');
+                heatLampBadge.classList.remove('bg-amber-100', 'text-amber-800');
+                heatLampBadge.classList.add('bg-amber-500', 'text-white');
+                heatLampBadge.textContent = `🔥 目前 ${ageVal} 日齡（≤35日齡必看）`;
+            } else {
+                ageCard.classList.add('bg-slate-50', 'border-slate-200');
+                ageCard.classList.remove('bg-amber-50', 'border-amber-400');
+                ageAlertBadge.classList.add('hidden');
+
+                heatLampBox.classList.add('bg-slate-50', 'border-slate-200');
+                heatLampBox.classList.remove('bg-amber-50/80', 'border-amber-400');
+                heatLampBadge.classList.add('bg-amber-100', 'text-amber-800');
+                heatLampBadge.classList.remove('bg-amber-500', 'text-white');
+                heatLampBadge.textContent = '35日齡以下必看';
+            }
+            updateBottomSummary();
+        }
+
+        // 計算前一夜日夜溫差與警戒
+        function calculateTempDiff() {
+            const maxVal = parseFloat(document.getElementById('prevMaxTemp').value);
+            const minVal = parseFloat(document.getElementById('prevMinTemp').value);
+            const diffEl = document.getElementById('tempDiffValue');
+            const alertEl = document.getElementById('tempDiffAlert');
+
+            if (!isNaN(maxVal) && !isNaN(minVal)) {
+                const diff = (maxVal - minVal).toFixed(1);
+                diffEl.textContent = diff;
+                alertEl.classList.remove('hidden');
+
+                if (parseFloat(diff) > 7) {
+                    diffEl.className = 'text-2xl font-black text-rose-600';
+                    alertEl.className = 'rounded-xl p-3 text-sm font-bold flex items-center gap-2.5 bg-rose-100 text-rose-900 border border-rose-300';
+                    alertEl.innerHTML = `<span class="text-lg">⚠️</span><span>警戒：日夜溫差達 ${diff}℃（超過 7℃ 警戒線），需調整夜間通風與保溫！</span>`;
+                } else if (parseFloat(diff) < 0) {
+                    diffEl.className = 'text-2xl font-black text-amber-600';
+                    alertEl.className = 'rounded-xl p-3 text-sm font-bold flex items-center gap-2.5 bg-amber-100 text-amber-900 border border-amber-300';
+                    alertEl.innerHTML = `<span>❓</span><span>數值異常：最高溫低於最低溫，請確認溫度計讀數。</span>`;
+                } else {
+                    diffEl.className = 'text-2xl font-black text-emerald-700';
+                    alertEl.className = 'rounded-xl p-3 text-sm font-bold flex items-center gap-2.5 bg-emerald-100 text-emerald-900 border border-emerald-300';
+                    alertEl.innerHTML = `<span class="text-lg">✅</span><span>正常：日夜溫差 ${diff}℃，控制在 7℃ 安全範圍內。</span>`;
+                }
+            } else {
+                diffEl.textContent = '--';
+                diffEl.className = 'text-2xl font-black text-slate-400';
+                alertEl.classList.add('hidden');
+            }
+            updateBottomSummary();
+        }
+
+        // 渲染四時段卡片
+        function renderTimeSlots() {
+            const container = document.getElementById('timeSlotsContainer');
+            container.innerHTML = TIME_SLOTS.map(slot => {
+                const isKeyPhotoTime = (slot === '09:00' || slot === '23:00');
+                return `
+                <div class="bg-slate-50 rounded-xl border border-slate-200 p-3.5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-slate-800 text-white font-black text-sm px-2.5 py-0.5 rounded-lg">${slot}</span>
+                            ${slot === '09:00' ? '<span class="text-[11px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded">查App預填全天</span>' : ''}
+                            ${slot === '23:00' ? '<span class="text-[11px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">夜間巡檢</span>' : ''}
+                        </div>
+                        <span id="gapBadge_${slot}" class="text-[11px] font-bold text-slate-400">尚未比對</span>
+                    </div>
+
+                    <!-- 氣象預報溫濕度 -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">氣象預報溫濕度</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="relative flex items-center">
+                                <input type="number" step="0.1" inputmode="decimal" id="temp_${slot}" placeholder="溫度" oninput="updateSlotData('${slot}', 'temp', this.value)" class="w-full bg-white border border-slate-300 rounded-lg pl-2.5 pr-8 py-1.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <span class="absolute right-2.5 text-xs font-bold text-slate-400">°C</span>
+                            </div>
+                            <div class="relative flex items-center">
+                                <input type="number" inputmode="numeric" id="hum_${slot}" placeholder="濕度" oninput="updateSlotData('${slot}', 'hum', this.value)" class="w-full bg-white border border-slate-300 rounded-lg pl-2.5 pr-7 py-1.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <span class="absolute right-2.5 text-xs font-bold text-slate-400">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 風扇與變頻器：預計 vs 實際 -->
+                    <div class="space-y-2 pt-1">
+                        <!-- 預計 -->
+                        <div class="bg-white p-2 rounded-lg border border-slate-200">
+                            <span class="block text-[11px] font-bold text-sky-700 mb-1">📌 09:00 預估設定（訓練預判力）</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="relative flex items-center">
+                                    <input type="number" inputmode="numeric" id="estFans_${slot}" placeholder="預計台數" oninput="updateSlotData('${slot}', 'estFans', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-md pl-2 pr-7 py-1 text-sm font-bold text-slate-800 focus:bg-white focus:ring-1 focus:ring-sky-500 outline-none">
+                                    <span class="absolute right-2 text-xs text-slate-500">台</span>
+                                </div>
+                                <div class="relative flex items-center">
+                                    <input type="number" inputmode="numeric" id="estFreq_${slot}" placeholder="預計變頻" oninput="updateSlotData('${slot}', 'estFreq', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-md pl-2 pr-6 py-1 text-sm font-bold text-slate-800 focus:bg-white focus:ring-1 focus:ring-sky-500 outline-none">
+                                    <span class="absolute right-2 text-xs text-slate-500">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 實際 -->
+                        <div class="bg-emerald-50/60 p-2 rounded-lg border border-emerald-200">
+                            <span class="block text-[11px] font-bold text-emerald-800 mb-1">✅ 現場實際調整（下班後核對）</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="relative flex items-center">
+                                    <input type="number" inputmode="numeric" id="actFans_${slot}" placeholder="實際台數" oninput="updateSlotData('${slot}', 'actFans', this.value)" class="w-full bg-white border border-emerald-300 rounded-md pl-2 pr-7 py-1 text-sm font-bold text-emerald-950 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                    <span class="absolute right-2 text-xs text-emerald-700">台</span>
+                                </div>
+                                <div class="relative flex items-center">
+                                    <input type="number" inputmode="numeric" id="actFreq_${slot}" placeholder="實際變頻" oninput="updateSlotData('${slot}', 'actFreq', this.value)" class="w-full bg-white border border-emerald-300 rounded-md pl-2 pr-6 py-1 text-sm font-bold text-emerald-950 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                    <span class="absolute right-2 text-xs text-emerald-700">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function updateSlotData(slot, field, value) {
+            appState.slots[slot][field] = value;
+            updateSlotGapBadge(slot);
+            saveFormData();
+        }
+
+        function updateSlotGapBadge(slot) {
+            const s = appState.slots[slot];
+            const badge = document.getElementById(`gapBadge_${slot}`);
+            if (!badge) return;
+
+            if (s.estFans !== '' && s.actFans !== '') {
+                const fanDiff = parseInt(s.actFans, 10) - parseInt(s.estFans, 10);
+                const freqDiff = (s.estFreq !== '' && s.actFreq !== '') ? (parseInt(s.actFreq, 10) - parseInt(s.estFreq, 10)) : null;
+                
+                if (fanDiff === 0 && (freqDiff === null || freqDiff === 0)) {
+                    badge.className = 'text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full';
+                    badge.textContent = '🎯 預判精準無落差';
+                } else {
+                    const fanStr = fanDiff > 0 ? `+${fanDiff}台` : (fanDiff < 0 ? `${fanDiff}台` : '台數同');
+                    const freqStr = freqDiff !== null ? (freqDiff > 0 ? ` / +${freqDiff}%` : (freqDiff < 0 ? ` / ${freqDiff}%` : '')) : '';
+                    badge.className = 'text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full';
+                    badge.textContent = `落差：${fanStr}${freqStr}`;
+                }
+            } else {
+                badge.className = 'text-[11px] font-bold text-slate-400';
+                badge.textContent = '待補實際值';
+            }
+        }
+
+        // 渲染帆布與保溫燈按鈕群組
+        function renderDeviceButtons() {
+            renderButtonGroup('curtain09Group', CURTAIN_OPTIONS, appState.curtain09, (val) => {
+                appState.curtain09 = val;
+                renderDeviceButtons();
+                saveFormData();
+            });
+            renderButtonGroup('curtain22Group', CURTAIN_OPTIONS, appState.curtain22, (val) => {
+                appState.curtain22 = val;
+                renderDeviceButtons();
+                saveFormData();
+            });
+            renderButtonGroup('lamp09Group', LAMP_OPTIONS, appState.lamp09, (val) => {
+                appState.lamp09 = val;
+                renderDeviceButtons();
+                saveFormData();
+            });
+            renderButtonGroup('lamp22Group', LAMP_OPTIONS, appState.lamp22, (val) => {
+                appState.lamp22 = val;
+                renderDeviceButtons();
+                saveFormData();
+            });
+        }
+
+        function renderButtonGroup(containerId, options, selectedVal, onSelect) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            options.forEach(opt => {
+                const isSelected = selectedVal === opt;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = opt;
+                btn.className = `touch-btn py-2 px-1 rounded-lg text-xs sm:text-sm font-bold border text-center ${
+                    isSelected
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                }`;
+                btn.onclick = () => onSelect(isSelected ? '' : opt);
+                container.appendChild(btn);
+            });
+        }
+
+        // 切換早晚巡檢頁籤
+        function switchInspectionShift(shift) {
+            appState.currentShift = shift;
+            const tabMorning = document.getElementById('tabMorning');
+            const tabNight = document.getElementById('tabNight');
+
+            if (shift === 'morning') {
+                tabMorning.className = 'flex-1 py-2.5 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-emerald-700 text-white shadow-sm transition-all';
+                tabNight.className = 'flex-1 py-2.5 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 transition-all';
+            } else {
+                tabNight.className = 'flex-1 py-2.5 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-indigo-900 text-white shadow-sm transition-all';
+                tabMorning.className = 'flex-1 py-2.5 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 transition-all';
+            }
+
+            renderInspectionShift();
+            saveFormData();
+        }
+
+        // 渲染當前時段（早場/晚場）四大觀察面向與拍照上傳區
+        function renderInspectionShift() {
+            const shift = appState.currentShift;
+            const shiftLabel = shift === 'morning' ? '09:00 早場巡檢' : '22:00 晚場巡檢';
+            const data = appState.inspection[shift];
+            const container = document.getElementById('inspectionContainer');
+
+            let html = `
+                <!-- 強制拍照回傳檢核卡 -->
+                <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded">📸 強制拍照回傳</span>
+                            <span class="font-bold text-indigo-950 text-sm">${shiftLabel}：豬群睡姿照</span>
+                        </div>
+                        <p class="text-xs text-indigo-800">拍一張豬群躺臥睡姿照傳群組，主管掃一眼即可指導調整帆布高度或保溫燈。</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 shrink-0 no-print">
+                        <label class="touch-btn cursor-pointer bg-white hover:bg-indigo-100 text-indigo-800 border border-indigo-300 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-xs">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <span>選取/拍攝照片</span>
+                            <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(event, '${shift}')" class="hidden">
+                        </label>
+
+                        <label class="touch-btn cursor-pointer bg-indigo-600 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-xs select-none">
+                            <input type="checkbox" ${data.photoSent ? 'checked' : ''} onchange="togglePhotoSent('${shift}', this.checked)" class="w-4 h-4 accent-amber-400 rounded">
+                            <span>已傳 LINE 群組</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+
+            // 照片預覽區（若有上傳）
+            if (data.photoDataUrl) {
+                html += `
+                <div class="relative bg-slate-900 rounded-xl overflow-hidden max-h-64 flex items-center justify-center border border-slate-300">
+                    <img src="${data.photoDataUrl}" alt="${shiftLabel}豬群睡姿照" class="max-h-64 object-contain">
+                    <button type="button" onclick="removePhoto('${shift}')" class="no-print absolute top-2 right-2 bg-rose-600/90 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow">移除照片</button>
+                    <span class="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2.5 py-1 rounded-md">${shiftLabel} 現場實拍預覽</span>
+                </div>
+                `;
+            }
+
+            // 四大觀察面向卡片
+            INSPECTION_SCHEMA.forEach(group => {
+                const selectedOptId = data[group.key];
+                const selectedOptionObj = group.options.find(o => o.id === selectedOptId);
+
+                html += `
+                <div class="border border-slate-200 rounded-xl p-3.5 space-y-2.5 bg-slate-50/50">
+                    <h4 class="font-bold text-slate-900 text-sm sm:text-base">${group.title}</h4>
+                    <div class="space-y-2">
+                `;
+
+                group.options.forEach(opt => {
+                    const isSelected = selectedOptId === opt.id;
+                    let cardStyle = 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50';
+                    let badgeHtml = '';
+
+                    if (isSelected) {
+                        if (opt.type === 'normal') {
+                            cardStyle = 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500';
+                            badgeHtml = '<span class="shrink-0 bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-md">✓ 正常</span>';
+                        } else if (opt.type === 'warning') {
+                            cardStyle = 'bg-amber-50 border-amber-500 text-amber-950 ring-1 ring-amber-500';
+                            badgeHtml = '<span class="shrink-0 bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-md">⚠️ 異常</span>';
+                        } else {
+                            cardStyle = 'bg-rose-50 border-rose-500 text-rose-950 ring-1 ring-rose-500';
+                            badgeHtml = '<span class="shrink-0 bg-rose-600 text-white text-xs font-bold px-2 py-0.5 rounded-md">🚨 警戒</span>';
+                        }
+                    }
+
+                    html += `
+                        <button type="button" onclick="selectInspectionOption('${shift}', '${group.key}', '${opt.id}')" class="touch-btn w-full text-left p-3 rounded-xl border transition-all flex items-start justify-between gap-2.5 ${cardStyle}">
+                            <div class="flex items-start gap-2.5">
+                                <div class="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-current' : 'border-slate-300'}">
+                                    ${isSelected ? '<div class="w-2.5 h-2.5 rounded-full bg-current"></div>' : ''}
+                                </div>
+                                <span class="text-sm font-medium leading-snug">${opt.label}</span>
+                            </div>
+                            ${badgeHtml}
+                        </button>
+                    `;
+                });
+
+                // 若選擇了異常選項，顯示即時帶教調整建議
+                if (selectedOptionObj && selectedOptionObj.advice) {
+                    html += `
+                        <div class="mt-2 p-3 rounded-xl bg-slate-800 text-amber-200 text-xs sm:text-sm font-medium leading-relaxed shadow-xs">
+                            ${selectedOptionObj.advice}
+                        </div>
+                    `;
+                }
+
+                html += `
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateShiftStatusDots();
+            updateBottomSummary();
+        }
+
+        function selectInspectionOption(shift, groupKey, optionId) {
+            const current = appState.inspection[shift][groupKey];
+            appState.inspection[shift][groupKey] = (current === optionId) ? '' : optionId;
+            renderInspectionShift();
+            saveFormData();
+        }
+
+        function togglePhotoSent(shift, checked) {
+            appState.inspection[shift].photoSent = checked;
+            updateShiftStatusDots();
+            saveFormData();
+            if (checked) showToast(`已標記 ${shift === 'morning' ? '09:00' : '22:00'} 照片傳送群組`);
+        }
+
+        function handlePhotoUpload(event, shift) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                // 壓縮圖片避免 localStorage 容量爆滿
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 800;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    appState.inspection[shift].photoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+                    appState.inspection[shift].photoSent = true;
+                    renderInspectionShift();
+                    saveFormData();
+                    showToast('照片已載入並自動勾選回傳確認');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePhoto(shift) {
+            appState.inspection[shift].photoDataUrl = '';
+            renderInspectionShift();
+            saveFormData();
+        }
+
+        function updateShiftStatusDots() {
+            ['morning', 'night'].forEach(shift => {
+                const d = appState.inspection[shift];
+                const dot = document.getElementById(shift === 'morning' ? 'morningStatusDot' : 'nightStatusDot');
+                const filledCount = [d.posture, d.cleanliness, d.air, d.feedWater].filter(Boolean).length;
+                if (filledCount === 4) {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+                } else if (filledCount > 0) {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                } else {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-300';
+                }
+            });
+        }
+
+        // 更新底部狀態列摘要
+        function updateBottomSummary() {
+            const dateStr = document.getElementById('reportDate').value || '未選日期';
+            const barnStr = document.getElementById('barnNumber').value ? `第 ${document.getElementById('barnNumber').value} 舍` : '未選棟舍';
+            const ageStr = document.getElementById('pigAge').value ? ` (${document.getElementById('pigAge').value}日齡)` : '';
+            document.getElementById('bottomSummaryText').textContent = `${dateStr} · ${barnStr}${ageStr}`;
+
+            // 統計異常項目
+            let warnings = [];
+            const maxVal = parseFloat(document.getElementById('prevMaxTemp').value);
+            const minVal = parseFloat(document.getElementById('prevMinTemp').value);
+            if (!isNaN(maxVal) && !isNaN(minVal) && (maxVal - minVal) > 7) {
+                warnings.push('溫差>7℃');
+            }
+
+            ['morning', 'night'].forEach(shift => {
+                const shiftName = shift === 'morning' ? '早場' : '晚場';
+                INSPECTION_SCHEMA.forEach(group => {
+                    const sel = appState.inspection[shift][group.key];
+                    const opt = group.options.find(o => o.id === sel);
+                    if (opt && opt.type !== 'normal') {
+                        warnings.push(`${shiftName}${group.title.split('.')[1].split('（')[0].trim()}異常`);
+                    }
+                });
+            });
+
+            const alertCountEl = document.getElementById('bottomAlertCount');
+            if (warnings.length > 0) {
+                alertCountEl.className = 'text-rose-600 font-bold';
+                alertCountEl.textContent = `⚠️ 注意 (${warnings.length})：${warnings.join('、')}`;
+            } else {
+                alertCountEl.className = 'text-emerald-700 font-medium';
+                alertCountEl.textContent = '✓ 目前無異常警示';
+            }
+        }
+
+        // --- 資料持久化 (localStorage) ---
+        function saveFormData() {
+            appState.reportDate = document.getElementById('reportDate').value;
+            appState.barnNumber = document.getElementById('barnNumber').value;
+            appState.pigAge = document.getElementById('pigAge').value;
+            appState.controllerTemp = document.getElementById('controllerTemp').value;
+            appState.mortalityCount = document.getElementById('mortalityCount').value;
+            appState.mortalityReason = document.getElementById('mortalityReason').value;
+            appState.prevMaxTemp = document.getElementById('prevMaxTemp').value;
+            appState.prevMinTemp = document.getElementById('prevMinTemp').value;
+            appState.thermometerReset = document.getElementById('thermometerReset').checked;
+
+            try {
+                localStorage.setItem('nursery_barn_checklist_v1', JSON.stringify(appState));
+            } catch (e) {
+                console.warn('LocalStorage 儲存空間已滿（可能因圖片過大）', e);
+            }
+            updateBottomSummary();
+        }
+
+        function loadFormData() {
+            try {
+                const saved = localStorage.getItem('nursery_barn_checklist_v1');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+                }
+            } catch (e) {
+                console.error('讀取暫存資料失敗', e);
+            }
+        }
+
+        function applyStateToInputs() {
+            document.getElementById('reportDate').value = appState.reportDate || new Date().toISOString().split('T')[0];
+            document.getElementById('barnNumber').value = appState.barnNumber || '';
+            document.getElementById('pigAge').value = appState.pigAge || '';
+            document.getElementById('controllerTemp').value = appState.controllerTemp || '';
+            document.getElementById('mortalityCount').value = appState.mortalityCount || '0';
+            document.getElementById('mortalityReason').value = appState.mortalityReason || '';
+            document.getElementById('prevMaxTemp').value = appState.prevMaxTemp || '';
+            document.getElementById('prevMinTemp').value = appState.prevMinTemp || '';
+            document.getElementById('thermometerReset').checked = !!appState.thermometerReset;
+
+            TIME_SLOTS.forEach(slot => {
+                const s = appState.slots[slot] || {};
+                document.getElementById(`temp_${slot}`).value = s.temp || '';
+                document.getElementById(`hum_${slot}`).value = s.hum || '';
+                document.getElementById(`estFans_${slot}`).value = s.estFans || '';
+                document.getElementById(`estFreq_${slot}`).value = s.estFreq || '';
+                document.getElementById(`actFans_${slot}`).value = s.actFans || '';
+                document.getElementById(`actFreq_${slot}`).value = s.actFreq || '';
+                updateSlotGapBadge(slot);
+            });
+
+            switchInspectionShift(appState.currentShift || 'morning');
+        }
+
+        // 清空重填確認框
+        function confirmResetForm() {
+            document.getElementById('confirmResetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('confirmResetModal').classList.add('hidden');
+        }
+
+        function executeResetForm() {
+            localStorage.removeItem('nursery_barn_checklist_v1');
+            appState = {
+                reportDate: new Date().toISOString().split('T')[0],
+                barnNumber: '',
+                pigAge: '',
+                controllerTemp: '',
+                mortalityCount: '0',
+                mortalityReason: '',
+                prevMaxTemp: '',
+                prevMinTemp: '',
+                thermometerReset: false,
+                slots: {
+                    '09:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' },
+                    '12:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' },
+                    '17:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' },
+                    '23:00': { temp: '', hum: '', estFans: '', estFreq: '', actFans: '', actFreq: '' }
+                },
+                curtain09: '',
+                curtain22: '',
+                lamp09: '',
+                lamp22: '',
+                currentShift: 'morning',
+                inspection: {
+                    morning: { posture: '', cleanliness: '', air: '', feedWater: '', photoSent: false, photoDataUrl: '' },
+                    night: { posture: '', cleanliness: '', air: '', feedWater: '', photoSent: false, photoDataUrl: '' }
+                }
+            };
+            renderTimeSlots();
+            renderDeviceButtons();
+            applyStateToInputs();
+            calculateTempDiff();
+            handleAgeChange();
+            closeResetModal();
+            showToast('表單已全部清空重設');
+        }
+
+        // --- 產生 LINE 群組回報文字 & 匯出 ---
+        function generateLineSummaryText() {
+            saveFormData();
+            const d = appState;
+            const barn = d.barnNumber ? `第 ${d.barnNumber} 舍` : '未填棟舍';
+            const age = d.pigAge ? `${d.pigAge} 日齡` : '未填';
+            const ctrlTemp = d.controllerTemp ? `${d.controllerTemp}℃` : '未填';
+            const mortCount = d.mortalityCount || '0';
+            const mortReason = d.mortalityReason ? `（${d.mortalityReason}）` : '';
+
+            // 溫差計算
+            let tempDiffText = '未填寫';
+            const maxT = parseFloat(d.prevMaxTemp);
+            const minT = parseFloat(d.prevMinTemp);
+            if (!isNaN(maxT) && !isNaN(minT)) {
+                const diff = (maxT - minT).toFixed(1);
+                const warnFlag = parseFloat(diff) > 7 ? ' ⚠️超過7℃警戒!' : ' ✅正常';
+                tempDiffText = `最高 ${maxT}℃ / 最低 ${minT}℃ / 溫差 ${diff}℃${warnFlag}`;
+            }
+
+            let lines = [];
+            lines.push(`🐷【保育舍每日環控與巡檢回報】`);
+            lines.push(`📅 日期：${d.reportDate} ｜ 🏠 棟舍：${barn}`);
+            lines.push(`📊 日齡：${age} ｜ 🎛️ 控制器：${ctrlTemp}`);
+            lines.push(`📉 今日死淘：共 ${mortCount} 頭 ${mortReason}`);
+            lines.push(`------------------------------`);
+            lines.push(`🌡️ 前夜高低溫：${tempDiffText}`);
+            lines.push(`🔄 溫度計歸零：${d.thermometerReset ? '✅已歸零' : '⬜未確認'}`);
+            lines.push(`------------------------------`);
+            lines.push(`⏰ 四時段環控（預報 ｜ 預計 → 實際）：`);
+
+            TIME_SLOTS.forEach(slot => {
+                const s = d.slots[slot];
+                const weather = (s.temp || s.hum) ? `${s.temp || '-'}°C/${s.hum || '-'}%` : '未填';
+                const est = (s.estFans || s.estFreq) ? `${s.estFans || '-'}台/${s.estFreq || '-'}%` : '未估';
+                const act = (s.actFans || s.actFreq) ? `${s.actFans || '-'}台/${s.actFreq || '-'}%` : '待補';
+                lines.push(`• ${slot}：[${weather}] 預(${est}) → 實(${act})`);
+            });
+
+            lines.push(`------------------------------`);
+            lines.push(`🎪 帆布與保溫燈狀態：`);
+            lines.push(`• 09:00 帆布：${d.curtain09 || '未選'} ｜ 保溫燈：${d.lamp09 || '未選'}`);
+            lines.push(`• 22:00 帆布：${d.curtain22 || '未選'} ｜ 保溫燈：${d.lamp22 || '未選'}`);
+            lines.push(`------------------------------`);
+
+            // 快篩結果彙整
+            ['morning', 'night'].forEach(shift => {
+                const title = shift === 'morning' ? '☀️ 早場巡檢 (09:00)' : '🌙 晚場巡檢 (22:00)';
+                const insp = d.inspection[shift];
+                const photoStatus = insp.photoSent ? '📸已傳群組' : '⬜尚未傳照';
+                lines.push(`${title} [${photoStatus}]：`);
+
+                INSPECTION_SCHEMA.forEach(group => {
+                    const shortName = group.title.split('.')[1].split('（')[0].trim();
+                    const selOpt = group.options.find(o => o.id === insp[group.key]);
+                    if (selOpt) {
+                        const icon = selOpt.type === 'normal' ? '✅' : '⚠️';
+                        lines.push(`  - ${shortName}：${icon} ${selOpt.label.split('：')[0]}`);
+                    } else {
+                        lines.push(`  - ${shortName}：未檢核`);
+                    }
+                });
+            });
+
+            return lines.join('\n');
+        }
+
+        function openReportModal() {
+            const text = generateLineSummaryText();
+            document.getElementById('lineReportText').value = text;
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        function copyLineReport() {
+            const textarea = document.getElementById('lineReportText');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast('✅ 已複製回報文字，可直接貼上至 LINE 群組！');
+            } catch (err) {
+                showToast('複製失敗，請手動全選文字複製');
+            }
+        }
+
+        function downloadCSV() {
+            saveFormData();
+            const d = appState;
+            const headers = ['日期', '棟舍', '日齡', '控制器溫度', '死淘頭數', '死淘原因', '前夜最高溫', '前夜最低溫', '日夜溫差', '09:00帆布', '22:00帆布', '09:00保溫燈', '22:00保溫燈'];
+            const diff = (!isNaN(parseFloat(d.prevMaxTemp)) && !isNaN(parseFloat(d.prevMinTemp)))
+                ? (parseFloat(d.prevMaxTemp) - parseFloat(d.prevMinTemp)).toFixed(1)
+                : '';
+
+            const row = [
+                d.reportDate,
+                d.barnNumber,
+                d.pigAge,
+                d.controllerTemp,
+                d.mortalityCount,
+                `"${(d.mortalityReason || '').replace(/"/g, '""')}"`,
+                d.prevMaxTemp,
+                d.prevMinTemp,
+                diff,
+                d.curtain09,
+                d.curtain22,
+                d.lamp09,
+                d.lamp22
+            ];
+
+            const csvContent = '\uFEFF' + headers.join(',') + '\n' + row.join(',');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `保育舍環控回報_${d.reportDate}_第${d.barnNumber || 'X'}舍.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 列印前更新時間戳記
+        window.onbeforeprint = function () {
+            document.getElementById('printTimestamp').textContent = new Date().toLocaleString('zh-TW');
+        };
+    </script>
+</body>
+</html>
